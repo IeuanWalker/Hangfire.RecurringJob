@@ -3,13 +3,15 @@
     public static class RecurringJobAttribute
     {
         public const string Attribute =
-@"[AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
+@"namespace IeuanWalker.Hangfire.RecurringJob;
+
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
 public sealed class RecurringJobAttribute : Attribute
 {
     /// <summary>
     /// The identifier of the RecurringJob
     /// </summary>
-    public string? RecurringJobId { get; set; }
+    public string? JobId { get; set; }
     /// <summary>
     /// Cron expressions
     /// </summary>
@@ -46,7 +48,7 @@ public sealed class RecurringJobAttribute : Attribute
     /// <param name=""cron"">Cron expressions</param>
     /// <param name=""timeZone"">Converts to <see cref=""TimeZoneInfo""/> via method <seealso cref=""TimeZoneInfo.FindSystemTimeZoneById(string)""/>.</param>
     /// <param name=""queue"">Queue name</param>
-    public RecurringJobAttribute(string cron, string timeZone, string queue, string? recurringJobId = null)
+    public RecurringJobAttribute(string cron, string timeZone, string queue, string? jobId = null)
     {
         if (string.IsNullOrEmpty(cron)) throw new ArgumentNullException(nameof(cron));
         if (string.IsNullOrEmpty(timeZone)) throw new ArgumentNullException(nameof(timeZone));
@@ -55,7 +57,7 @@ public sealed class RecurringJobAttribute : Attribute
         Cron = cron;
         TimeZone = timeZone;
         Queue = queue;
-        RecurringJobId = recurringJobId;
+        JobId = jobId;
     }
 }";
     }

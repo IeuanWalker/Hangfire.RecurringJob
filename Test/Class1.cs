@@ -1,22 +1,23 @@
-﻿using Hangfire;
+﻿using IeuanWalker.Hangfire.RecurringJob;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace TestSolution;
 
 [RecurringJob]
-public class DeleteOldReports
+public class DeleteOldReports : IRecurringJobAsync
 {
-    public void Execute()
+    public Task Execute()
     {
+        throw new NotImplementedException();
     }
 }
 
 [RecurringJob("* * * *")]
-public class SendConfirmationEmails
+public class SendConfirmationEmails : IRecurringJob
 {
     public void Execute()
     {
-        Cron.Daily();
+        throw new NotImplementedException();
     }
 }
 
@@ -29,9 +30,6 @@ public class Class2
     }
     public void Method1()
     {
-        _serviceCollection.RegisterServicesFromTestSolution();
+        _serviceCollection.RegisterRecurringJobsFromTestSolution();
     }
 }
-
-
-
