@@ -1,9 +1,9 @@
-﻿using IeuanWalker.Hangfire.Attributes;
+﻿using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace TestSolution;
 
-[RecurringJob("DeleteOldReportsAtMidnight", "* *678 * *")]
+[RecurringJob]
 public class DeleteOldReports
 {
     public void Execute()
@@ -11,11 +11,12 @@ public class DeleteOldReports
     }
 }
 
-[RecurringJob("* *678 * *")]
+[RecurringJob("* * * *")]
 public class SendConfirmationEmails
 {
     public void Execute()
     {
+        Cron.Daily();
     }
 }
 
@@ -31,5 +32,6 @@ public class Class2
         _serviceCollection.RegisterServicesFromTestSolution();
     }
 }
+
 
 
