@@ -30,13 +30,13 @@ public class HangfireRecuringJobGenerator : IIncrementalGenerator
             "IRecurringJobAsync.g.cs",
             SourceText.From(RecurringJobInterface.InterfaceAsync, Encoding.UTF8)));
 
-        // Generate implementation
-        //var provider = context.SyntaxProvider
-        //    .CreateSyntaxProvider(Match, Transform)
-        //    .Where(static r => r is not null)
-        //    .Collect();
+        Generate implementation
+        var provider = context.SyntaxProvider
+            .CreateSyntaxProvider(Match, Transform)
+            .Where(static r => r is not null)
+            .Collect();
 
-        //context.RegisterSourceOutput(provider, Generate!);
+        context.RegisterSourceOutput(provider, Generate!);
 
     }
     static bool Match(SyntaxNode node, CancellationToken _)
