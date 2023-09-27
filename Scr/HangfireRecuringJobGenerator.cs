@@ -17,9 +17,13 @@ public class HangfireRecuringJobGenerator : IIncrementalGenerator
     private static string? _assemblyName;
     private const string _attribShortName = "RecurringJob";
 
+    /// <summary>
+    /// Starts the generator
+    /// </summary>
+    /// <param name="context"></param>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Classes/ interfaces for the users to use
+        // Constant classes/ interfaces for the users to use
         context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
             "RecurringJobAttribute.g.cs",
             SourceText.From(RecurringJobAttribute.Attribute, Encoding.UTF8)));
@@ -38,6 +42,12 @@ public class HangfireRecuringJobGenerator : IIncrementalGenerator
 
         context.RegisterSourceOutput(provider, Generate!);
     }
+
+    /// <summary>
+    /// Find all valid classes with the <see cref="RecurringJobAttribute"/> attribute
+    /// </summary>
+    /// <param name="node"></param>
+    /// <param name="_"></param>
     static bool Match(SyntaxNode node, CancellationToken _)
     {
         if (node is not ClassDeclarationSyntax cds || cds.TypeParameterList is not null)
@@ -48,7 +58,14 @@ public class HangfireRecuringJobGenerator : IIncrementalGenerator
         return cds.AttributeLists.Any(al => al.Attributes.Any(a => ExtractName(a.Name)?.Equals(_attribShortName) ?? false));
     }
 
-    static Registration? Transform(GeneratorSyntaxContext context, CancellationToken _)
+    /// <summary>
+    /// Transforms all matched classes into <see cref="JobModel"/>s
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="_"></param>
+    /// <exception cref="NullReferenceException"></exception>
+    /// <exception cref="Exception"></exception>
+    static JobModel? Transform(GeneratorSyntaxContext context, CancellationToken _)
     {
         var service = context.SemanticModel.GetDeclaredSymbol(context.Node);
 
@@ -96,9 +113,14 @@ public class HangfireRecuringJobGenerator : IIncrementalGenerator
         return new(fullClassName, jobId, cron, "", "");
     }
 
-    static void Generate(SourceProductionContext context, ImmutableArray<Registration> registrations)
+    /// <summary>
+    /// Generates registration code for all <see cref="JobModel"/>
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="jobs"></param>
+    static void Generate(SourceProductionContext context, ImmutableArray<JobModel> jobs)
     {
-        if (!registrations.Any())
+        if (!jobs.Any())
             return;
 
         b.Clear().Append(
@@ -112,9 +134,9 @@ public static class RecurringJobRegistrationExtensions
     public static IServiceCollection RegisterRecurringJobsFrom").Append(_assemblyName?.Sanitize(string.Empty) ?? "Assembly").Append(@"(this IServiceCollection sc)
     {
 ");
-        foreach (var reg in registrations.OrderBy(r => r!.JobId))
+        foreach (var job in jobs.OrderBy(r => r!.JobId))
         {
-            b.Append("\t\tRecurringJob.AddOrUpdate<").Append(reg.FullClassName).Append(">(\"").Append(reg.JobId).Append("\"").Append(", x => x.Execute(), \"").Append(reg.Cron).Append("\");").Append("\r\n");
+            b.Append("\t\tRecurringJob.AddOrUpdate<").Append(job.FullClassName).Append(">(\"").Append(job.JobId).Append("\"").Append(", x => x.Execute(), \"").Append(job.Cron).Append("\");").Append("\r\n");
         }
         b.Append(@"
         return sc;
@@ -124,14 +146,7 @@ public static class RecurringJobRegistrationExtensions
         context.AddSource("RecurringJobRegistrationExtensions.g.cs", SourceText.From(b.ToString(), Encoding.UTF8));
     }
 
-    private sealed class Registration(string fullClassName, string jobId, string cron, string queue, string timeZone)
-    {
-        public string FullClassName { get; } = fullClassName;
-        public string JobId { get; } = jobId;
-        public string Cron { get; } = cron;
-        public string Queue { get; } = queue;
-        public string TimeZone { get; set; } = timeZone;
-    };
+
 
     private static string? ExtractName(NameSyntax? name)
     {
