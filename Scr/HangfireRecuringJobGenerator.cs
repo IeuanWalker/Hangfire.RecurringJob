@@ -1,5 +1,6 @@
 ﻿using HangfireRecuringJob;
 using IeuanWalker.Hangfire.Attributes;
+using IeuanWalker.Hangfire.Interfaces;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -18,15 +19,25 @@ public class HangfireRecuringJobGenerator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var provider = context.SyntaxProvider
-            .CreateSyntaxProvider(Match, Transform)
-            .Where(static r => r is not null)
-            .Collect();
-
-        context.RegisterSourceOutput(provider, Generate!);
+        // Classes/ interfaces for the users to use
         context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
             "RecurringJobAttribute.g.cs",
             SourceText.From(RecurringJobAttribute.Attribute, Encoding.UTF8)));
+        context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
+            "IRecurringJob.g.cs",
+            SourceText.From(RecurringJobInterface.InterfaceVoid, Encoding.UTF8)));
+        context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
+            "IRecurringJobAsync.g.cs",
+            SourceText.From(RecurringJobInterface.InterfaceAsync, Encoding.UTF8)));
+
+        // Generate implementation
+        //var provider = context.SyntaxProvider
+        //    .CreateSyntaxProvider(Match, Transform)
+        //    .Where(static r => r is not null)
+        //    .Collect();
+
+        //context.RegisterSourceOutput(provider, Generate!);
+
     }
     static bool Match(SyntaxNode node, CancellationToken _)
     {
@@ -69,7 +80,7 @@ public class HangfireRecuringJobGenerator : IIncrementalGenerator
            .Select(x => x.Expression)
            .ToList();
 
-        string name = string.Empty;
+        string jobId = string.Empty;
         string cron = string.Empty;
         if (expressions.Count == 1)
         {
@@ -77,16 +88,16 @@ public class HangfireRecuringJobGenerator : IIncrementalGenerator
         }
         else
         {
-            name = (string)context.SemanticModel.GetOperation(expressions[0])!.ConstantValue!.Value!;
+            jobId = (string)context.SemanticModel.GetOperation(expressions[0])!.ConstantValue!.Value!;
             cron = (string)context.SemanticModel.GetOperation(expressions[1])!.ConstantValue!.Value!;
         }
 
-        if (string.IsNullOrEmpty(name))
+        if (string.IsNullOrEmpty(jobId))
         {
-            name = fullClassName;
+            jobId = fullClassName;
         }
 
-        return new(fullClassName, name, cron);
+        return new(fullClassName, jobId, cron, "", "");
     }
 
     static void Generate(SourceProductionContext context, ImmutableArray<Registration> registrations)
@@ -100,28 +111,30 @@ public class HangfireRecuringJobGenerator : IIncrementalGenerator
 using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 
-public static class ServiceRegistrationExtensions
+public static class RecurringJobRegistrationExtensions
 {
-    public static IServiceCollection RegisterServicesFrom").Append(_assemblyName?.Sanitize(string.Empty) ?? "Assembly").Append(@"(this IServiceCollection sc)
+    public static IServiceCollection RegisterRecurringJobsFrom").Append(_assemblyName?.Sanitize(string.Empty) ?? "Assembly").Append(@"(this IServiceCollection sc)
     {
 ");
-        foreach (var reg in registrations.OrderBy(r => r!.Name))
+        foreach (var reg in registrations.OrderBy(r => r!.JobId))
         {
-            b.Append("\t\tRecurringJob.AddOrUpdate<").Append(reg.FullClassName).Append(">(\"").Append(reg.Name).Append("\"").Append(", x => x.Execute(), \"").Append(reg.Cron).Append("\");").Append("\r\n");
+            b.Append("\t\tRecurringJob.AddOrUpdate<").Append(reg.FullClassName).Append(">(\"").Append(reg.JobId).Append("\"").Append(", x => x.Execute(), \"").Append(reg.Cron).Append("\");").Append("\r\n");
         }
         b.Append(@"
         return sc;
     }
 }");
         string test = b.ToString();
-        context.AddSource("RecurringJobRegistrations.g.cs", SourceText.From(b.ToString(), Encoding.UTF8));
+        context.AddSource("RecurringJobRegistrationExtensions.g.cs", SourceText.From(b.ToString(), Encoding.UTF8));
     }
 
-    private sealed class Registration(string fullClassName, string name, string cron)
+    private sealed class Registration(string fullClassName, string jobId, string cron, string queue, string timeZone)
     {
         public string FullClassName { get; } = fullClassName;
-        public string Name { get; } = name;
+        public string JobId { get; } = jobId;
         public string Cron { get; } = cron;
+        public string Queue { get; } = queue;
+        public string TimeZone { get; set; } = timeZone;
     };
 
     private static string? ExtractName(NameSyntax? name)
