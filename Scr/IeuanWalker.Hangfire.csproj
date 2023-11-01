@@ -12,7 +12,6 @@
 
 	<ItemGroup>
 	  <Compile Remove="RecuringJobGenerator - Copy.cs" />
-	  <Compile Remove="RecuringJobGenerator.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

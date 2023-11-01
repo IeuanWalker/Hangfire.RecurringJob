@@ -3,7 +3,7 @@
 namespace TestSolution;
 
 [RecurringJob]
-public class RecurringJob1 : IRecurringJobAsync
+public class RecurringJob1
 {
 	public Task Execute()
 	{
@@ -12,7 +12,7 @@ public class RecurringJob1 : IRecurringJobAsync
 }
 
 [RecurringJob("* * * *")]
-public class RecurringJob2 : IRecurringJob
+public class RecurringJob2
 {
 	public void Execute()
 	{
@@ -21,7 +21,7 @@ public class RecurringJob2 : IRecurringJob
 }
 
 [RecurringJob("* * * *")]
-public class RecurringJob3 : IRecurringJob
+public class RecurringJob3
 {
 	public void Execute()
 	{
@@ -30,7 +30,7 @@ public class RecurringJob3 : IRecurringJob
 }
 
 [RecurringJob("* * * *")]
-public class RecurringJob4 : IRecurringJob
+public class RecurringJob4
 {
 	public void Execute()
 	{
