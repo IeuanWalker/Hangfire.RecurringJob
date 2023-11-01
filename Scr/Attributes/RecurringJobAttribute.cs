@@ -63,5 +63,3 @@ public sealed class RecurringJobAttribute : Attribute
 	}
 }";
 }
-
-

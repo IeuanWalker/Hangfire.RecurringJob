@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace TestSolution;
+
 public class MockStartup
 {
 	readonly IServiceCollection _serviceCollection;
