@@ -41,7 +41,7 @@ public class RecuringJobGenerator : IIncrementalGenerator
 			return null;
 		}
 
-		if (compilationUnit.Members.FirstOrDefault(m => m.IsKind(SyntaxKind.NamespaceDeclaration) || m.IsKind(SyntaxKind.FileScopedNamespaceDeclaration)) is not BaseNamespaceDeclarationSyntax logToGenerateNamespace)
+		if (compilationUnit.Members.FirstOrDefault(m => m.IsKind(SyntaxKind.NamespaceDeclaration) || m.IsKind(SyntaxKind.FileScopedNamespaceDeclaration)) is not BaseNamespaceDeclarationSyntax)
 		{
 			return null;
 		}
