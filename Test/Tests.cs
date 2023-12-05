@@ -1,4 +1,4 @@
-﻿using IeuanWalker.Hangfire.RecurringJob;
+﻿using IeuanWalker.Hangfire.Attributes;
 
 namespace TestSolution;
 
@@ -11,7 +11,7 @@ public class RecurringJob1
 	}
 }
 
-[RecurringJob("* * * *")]
+//[RecurringJob("* * * *")]
 public class RecurringJob2
 {
 	public void Execute()
@@ -20,7 +20,7 @@ public class RecurringJob2
 	}
 }
 
-[RecurringJob("* * * *")]
+//[RecurringJob("* * * *")]
 public class RecurringJob3
 {
 	public void Execute()
@@ -29,7 +29,7 @@ public class RecurringJob3
 	}
 }
 
-[RecurringJob("* * * *")]
+//[RecurringJob("* * * *")]
 public class RecurringJob4
 {
 	public void Execute()

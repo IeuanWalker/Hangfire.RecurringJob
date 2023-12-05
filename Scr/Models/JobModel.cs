@@ -15,5 +15,5 @@ sealed class JobModel
 	public string JobId { get; }
 	public string Cron { get; }
 	public string Queue { get; }
-	public string TimeZone { get; set; }
+	public string TimeZone { get; }
 }
