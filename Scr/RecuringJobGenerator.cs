@@ -16,13 +16,8 @@ public class RecuringJobGenerator : IIncrementalGenerator
 	static string? assemblyName;
 	const string fullAttribute = "IeuanWalker.Hangfire.Attributes.RecurringJobAttribute";
 
-	/// <summary>
-	/// Starts the generator
-	/// </summary>
-	/// <param name="context"></param>
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
-		// Constant classes/ interfaces for the users to use
 		context.RegisterPostInitializationOutput(ctx => ctx.AddSource("RecurringJobAttribute.g.cs", RecurringJobAttribute.Attribute));
 
 		IncrementalValueProvider<ImmutableArray<JobModel?>> provider = context.SyntaxProvider
@@ -37,7 +32,6 @@ public class RecuringJobGenerator : IIncrementalGenerator
 	{
 		return true;
 	}
-
 
 	static JobModel? Transform(GeneratorAttributeSyntaxContext context, CancellationToken _)
 	{
