@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Text;
 using IeuanWalker.Hangfire.Attributes;
 using IeuanWalker.Hangfire.Helpers;
@@ -6,16 +7,14 @@ using IeuanWalker.Hangfire.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 
 namespace IeuanWalker.Hangfire;
 
 [Generator(LanguageNames.CSharp)]
 public class RecuringJobGenerator : IIncrementalGenerator
 {
-	static readonly StringBuilder b = new();
 	static string? assemblyName;
-	const string fullAttribute = "IeuanWalker.Hangfire.RecurringJob.RecurringJobAttribute";
+	const string fullAttribute = "IeuanWalker.Hangfire.Attributes.RecurringJobAttribute";
 
 	/// <summary>
 	/// Starts the generator
@@ -24,134 +23,95 @@ public class RecuringJobGenerator : IIncrementalGenerator
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
 		// Constant classes/ interfaces for the users to use
-		context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
-			"RecurringJobAttribute.g.cs",
-			SourceText.From(RecurringJobAttribute.Attribute, Encoding.UTF8)));
+		context.RegisterPostInitializationOutput(ctx => ctx.AddSource("RecurringJobAttribute.g.cs", RecurringJobAttribute.Attribute));
 
-		//Generator implementation
-		var enumDeclarations = context.SyntaxProvider
-		   .CreateSyntaxProvider(
-			   predicate: static (s, _) => IsSyntaxTargetForGeneration(s),
-			   transform: static (ctx, _) => GetSemanticTargetForGeneration(ctx))
-		   .Where(static m => m is not null)
-		   .Collect();
+		IncrementalValueProvider<ImmutableArray<JobModel?>> provider = context.SyntaxProvider
+						 .ForAttributeWithMetadataName(fullAttribute, Match, Transform)
+						 .Where(static r => r is not null)
+						 .Collect();
 
-		context.RegisterSourceOutput(enumDeclarations, Generate!);
+		Console.Write("!");
+
+		context.RegisterSourceOutput(provider, Generate!);
 	}
 
-	static bool IsSyntaxTargetForGeneration(SyntaxNode node) => node is ClassDeclarationSyntax { AttributeLists.Count: > 0 };
-
-	static List<JobModel>? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
+	static bool Match(SyntaxNode node, CancellationToken _)
 	{
-		if (context.Node is not ClassDeclarationSyntax classSyntax)
+		return true;
+	}
+
+
+	static JobModel? Transform(GeneratorAttributeSyntaxContext context, CancellationToken _)
+	{
+		IEnumerable<SyntaxNode> ancestors = context.TargetNode.Ancestors();
+		if (ancestors.FirstOrDefault(x => x.IsKind(SyntaxKind.CompilationUnit)) is not CompilationUnitSyntax compilationUnit)
 		{
 			return null;
 		}
-		var classSymbol = context.SemanticModel.GetDeclaredSymbol(classSyntax);
-		if (classSymbol is null)
+
+		if (compilationUnit.Members.FirstOrDefault(m => m.IsKind(SyntaxKind.NamespaceDeclaration) || m.IsKind(SyntaxKind.FileScopedNamespaceDeclaration)) is not BaseNamespaceDeclarationSyntax logToGenerateNamespace)
+		{
+			return null;
+		}
+
+		INamedTypeSymbol? markerAttribute = context.SemanticModel.Compilation.GetTypeByMetadataName(fullAttribute);
+		if (markerAttribute is null)
+		{
+			return null;
+		}
+
+		AttributeData? attribute = context.Attributes.FirstOrDefault(a => a?.AttributeClass is not null && a.AttributeClass.Equals(markerAttribute, SymbolEqualityComparer.Default));
+
+		if (attribute is null)
 		{
 			return null;
 		}
 
 		assemblyName = context.SemanticModel.Compilation.AssemblyName;
-		string fullClassName = classSymbol.ToDisplayString() ?? throw new NullReferenceException();
-
-		var attributes = classSymbol.GetAttributes();
-
-		List<JobModel?> registrations = attributes
-			.Select(x => CreateServiceRegistration(x, fullClassName))
-			.Where(x => x is not null)
-			.ToList();
-
-		if (registrations.Count == 0)
-		{
-			return null;
-		}
-
-		return registrations.Where(x => x is not null).Select(x => x!).ToList();
-	}
-
-	static JobModel? CreateServiceRegistration(AttributeData attribute, string fullClassName)
-	{
-		// Is recuring job attribute
-		if (attribute.ToString() != fullAttribute)
-		{
-			return null;
-		}
-
-		// properties
-		string? jobId = null;
-		string? cron = null;
-		string? queue = null;
-		string? timeZone = null;
-
-		foreach (var parameter in attribute.NamedArguments)
-		{
-			// match name with service registration configuration
-			var name = parameter.Key;
-			var value = parameter.Value.Value;
-
-			if (string.IsNullOrEmpty(name) || value == null)
-			{
-				continue;
-			}
-
-			switch (name)
-			{
-				case "JobId":
-					jobId = value.ToString();
-					break;
-				case "Cron":
-					cron = value.ToString();
-					break;
-				case "Queue":
-					queue = value.ToString();
-					break;
-				case "TimeZone":
-					timeZone = value.ToString();
-					break;
-			}
-		}
+		string? jobId = (string?)attribute.NamedArguments.FirstOrDefault(a => a.Key == "JobId").Value.Value;
+		string? cron = (string?)attribute.NamedArguments.FirstOrDefault(a => a.Key == "Cron").Value.Value;
+		string? queue = (string?)attribute.NamedArguments.FirstOrDefault(a => a.Key == "Queue").Value.Value;
+		string? timeZone = (string?)attribute.NamedArguments.FirstOrDefault(a => a.Key == "TimeZone").Value.Value;
 
 		if (jobId is null || cron is null || queue is null || timeZone is null)
 		{
 			return null;
 		}
 
-		return new JobModel(fullClassName, jobId, cron, queue, timeZone);
+		return new JobModel(context.TargetSymbol.Name, jobId, cron, queue, timeZone);
 	}
 
-	static void Generate(SourceProductionContext context, ImmutableArray<List<JobModel>> jobs)
+	static void Generate(SourceProductionContext context, ImmutableArray<JobModel> jobs)
 	{
 		if (!jobs.Any())
 		{
 			return;
 		}
-
-		var allJobs = jobs.SelectMany(x => x).ToList();
-
-		b.Clear().Append(
+		StringBuilder sb = new();
+		sb.Append(
 "namespace ").Append(assemblyName).Append(@";
 
-// <auto-generated/>
+		// <auto-generated/>
 
-using Hangfire;
-using Microsoft.Extensions.DependencyInjection;
+		using Hangfire;
+		using Microsoft.Extensions.DependencyInjection;
 
-public static class RecurringJobRegistrationExtensions
-{
-    public static IServiceCollection RegisterRecurringJobsFrom").Append(assemblyName?.Sanitize(string.Empty) ?? "Assembly").Append(@"(this IServiceCollection sc)
-    {
-");
-		foreach (var job in allJobs.OrderBy(r => r!.JobId))
+		public static class RecurringJobRegistrationExtensions
 		{
-			b.Append("\t\tRecurringJob.AddOrUpdate<").Append(job.FullClassName).Append(">(\"").Append(job.JobId).Append("\"").Append(", x => x.Execute(), \"").Append(job.Cron).Append("\");").Append("\r\n");
+		    public static IServiceCollection RegisterRecurringJobsFrom").Append(assemblyName?.Sanitize(string.Empty) ?? "Assembly").Append(@"(this IServiceCollection sc)
+		    {
+		");
+		foreach (JobModel job in jobs.OrderBy(r => r!.JobId))
+		{
+			sb.Append("\t\tRecurringJob.AddOrUpdate<").Append(job.FullClassName).Append(">(\"").Append(job.JobId).Append("\"").Append(", x => x.Execute(), \"").Append(job.Cron).Append("\");").Append("\r\n");
 		}
-		b.Append(@"
-        return sc;
-    }
-}");
-		string test = b.ToString();
-		context.AddSource("RecurringJobRegistrationExtensions.g.cs", SourceText.From(b.ToString(), Encoding.UTF8));
+		sb.Append(@"
+		        return sc;
+		    }
+		}");
+
+		Debug.WriteLine(sb.ToString());
+
+		context.AddSource("RecurringJobRegistrationExtensions.g.cs", sb.ToString());
 	}
 }

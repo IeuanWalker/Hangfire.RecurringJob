@@ -37,6 +37,7 @@ dotnet_style_namespace_match_folder = true:suggestion
 
 # IDE0046: Convert to conditional expression
 dotnet_diagnostic.IDE0046.severity = none
+dotnet_style_prefer_collection_expression = true:suggestion
 
 [*.sln]
 indent_size = 4
@@ -199,3 +200,8 @@ dotnet_diagnostic.S3358.severity = silent
 csharp_style_allow_blank_line_after_token_in_conditional_expression_experimental = true:silent
 dotnet_diagnostic.S112.severity = silent
 dotnet_diagnostic.S1135.severity = suggestion
+csharp_style_prefer_primary_constructors = false:suggestion
+csharp_style_deconstructed_variable_declaration = true:suggestion
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = false:suggestion
+csharp_style_var_elsewhere = false:suggestion
