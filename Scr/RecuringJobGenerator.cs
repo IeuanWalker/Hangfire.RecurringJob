@@ -30,8 +30,6 @@ public class RecuringJobGenerator : IIncrementalGenerator
 						 .Where(static r => r is not null)
 						 .Collect();
 
-		Console.Write("!");
-
 		context.RegisterSourceOutput(provider, Generate!);
 	}
 
