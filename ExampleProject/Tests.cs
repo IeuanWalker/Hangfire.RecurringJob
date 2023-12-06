@@ -2,7 +2,8 @@
 
 namespace ExampleProject;
 
-[RecurringJob]
+
+[RecurringJob("* * * *")]
 public class RecurringJob1
 {
 	public Task Execute()
@@ -11,7 +12,7 @@ public class RecurringJob1
 	}
 }
 
-//[RecurringJob("* * * *")]
+[RecurringJob("* * * *", "Priority")]
 public class RecurringJob2
 {
 	public void Execute()
@@ -20,7 +21,8 @@ public class RecurringJob2
 	}
 }
 
-//[RecurringJob("* * * *")]
+[RecurringJob]
+[RecurringJob("*/5 * * * *", "GMT", "Priority", "DataRetention")]
 public class RecurringJob3
 {
 	public void Execute()
@@ -29,7 +31,7 @@ public class RecurringJob3
 	}
 }
 
-//[RecurringJob("* * * *")]
+[RecurringJob("* * * *")]
 public class RecurringJob4
 {
 	public void Execute()

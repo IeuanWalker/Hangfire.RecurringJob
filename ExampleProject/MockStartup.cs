@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Hangfire;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ExampleProject;
 
@@ -14,5 +15,10 @@ public class MockStartup
 	public void Method1()
 	{
 		_serviceCollection.RegisterRecurringJobsFromExampleProject();
+
+		RecurringJob.AddOrUpdate<RecurringJob1>("RecurringJob1", "", x => x.Execute(), "0 0 * * *", new RecurringJobOptions
+		{
+			TimeZone = TimeZoneInfo.FindSystemTimeZoneById("UTC")
+		});
 	}
 }
