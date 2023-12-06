@@ -1,4 +1,4 @@
-﻿namespace IeuanWalker.Hangfire.Attributes;
+﻿namespace IeuanWalker.Hangfire.RecurringJob.Generator.Attributes;
 
 public static class RecurringJobAttribute
 {

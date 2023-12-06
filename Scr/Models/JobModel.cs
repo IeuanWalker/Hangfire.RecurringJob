@@ -1,4 +1,4 @@
-﻿namespace IeuanWalker.Hangfire.Models;
+﻿namespace IeuanWalker.Hangfire.RecurringJob.Generator.Models;
 
 sealed class JobModel
 {
