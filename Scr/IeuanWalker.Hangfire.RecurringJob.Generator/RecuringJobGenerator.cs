@@ -1,5 +1,4 @@
 ﻿using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Text;
 using IeuanWalker.Hangfire.RecurringJob.Generator.Helpers;
 using IeuanWalker.Hangfire.RecurringJob.Generator.Models;
@@ -95,8 +94,6 @@ public static class RecurringJobRegistrationExtensions
 		return sc;
 	}
 }");
-
-		Debug.WriteLine(sb.ToString());
 
 		context.AddSource("RecurringJobRegistrationExtensions.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
 	}
