@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Text;
+using Hangfire.States;
 using IeuanWalker.Hangfire.RecurringJob.Generator.Helpers;
 using IeuanWalker.Hangfire.RecurringJob.Generator.Models;
 using Microsoft.CodeAnalysis;
@@ -17,7 +18,7 @@ public class RecuringJobGenerator : IIncrementalGenerator
 
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
-		IncrementalValueProvider<ImmutableArray<JobModel?>> provider = context.SyntaxProvider
+		IncrementalValueProvider<ImmutableArray<List<JobModel>?>> provider = context.SyntaxProvider
 						 .ForAttributeWithMetadataName(fullAttribute, Match, Transform)
 						 .Where(static r => r is not null)
 						 .Collect();
@@ -30,7 +31,7 @@ public class RecuringJobGenerator : IIncrementalGenerator
 		return true;
 	}
 
-	static JobModel? Transform(GeneratorAttributeSyntaxContext context, CancellationToken _)
+	static List<JobModel>? Transform(GeneratorAttributeSyntaxContext context, CancellationToken _)
 	{
 		IEnumerable<SyntaxNode> ancestors = context.TargetNode.Ancestors();
 		if (ancestors.FirstOrDefault(x => x.IsKind(SyntaxKind.CompilationUnit)) is not CompilationUnitSyntax compilationUnit)
@@ -49,25 +50,43 @@ public class RecuringJobGenerator : IIncrementalGenerator
 			return null;
 		}
 
-		AttributeData? attribute = context.Attributes.FirstOrDefault(a => a?.AttributeClass is not null && a.AttributeClass.Equals(markerAttribute, SymbolEqualityComparer.Default));
-
-		if (attribute is null)
+		List<JobModel> result = [];
+		foreach (ImmutableArray<TypedConstant> constructorArguments in context.Attributes.Where(a => a?.AttributeClass is not null && a.AttributeClass.Equals(markerAttribute, SymbolEqualityComparer.Default)).Select(x => x.ConstructorArguments))
 		{
-			return null;
+			assemblyName = context.SemanticModel.Compilation.AssemblyName;
+			string jobId = context.TargetSymbol.Name;
+			string cron = "0 0 * * *";
+			string queue = EnqueuedState.DefaultQueue;
+			string timeZone = "UTC";
+
+			switch (constructorArguments.Length)
+			{
+				case 1:
+					cron = constructorArguments[0].Value?.ToString() ?? cron;
+					break;
+				case 2:
+					cron = constructorArguments[0].Value?.ToString() ?? cron;
+					queue = constructorArguments[1].Value?.ToString() ?? queue;
+					break;
+				case 4:
+					cron = constructorArguments[0].Value?.ToString() ?? cron;
+					timeZone = constructorArguments[1].Value?.ToString() ?? timeZone;
+					queue = constructorArguments[2].Value?.ToString() ?? queue;
+					jobId = constructorArguments[3].Value?.ToString() ?? jobId;
+					break;
+			}
+
+			result.Add(new JobModel(context.TargetSymbol.ToString(), jobId, cron, queue, timeZone));
 		}
 
-		assemblyName = context.SemanticModel.Compilation.AssemblyName;
-		string jobId = (string?)attribute.NamedArguments.FirstOrDefault(a => a.Key == "JobId").Value.Value ?? context.TargetSymbol.Name;
-		string cron = (string)attribute.NamedArguments.FirstOrDefault(a => a.Key == "Cron").Value.Value!;
-		string queue = (string)attribute.NamedArguments.FirstOrDefault(a => a.Key == "Queue").Value.Value!;
-		string timeZone = (string)attribute.NamedArguments.FirstOrDefault(a => a.Key == "TimeZone").Value.Value!;
-
-		return new JobModel(context.TargetSymbol.ToString(), jobId, cron, queue, timeZone);
+		return result.Count > 0 ? result : null;
 	}
 
-	static void Generate(SourceProductionContext context, ImmutableArray<JobModel> jobs)
+	static void Generate(SourceProductionContext context, ImmutableArray<List<JobModel>> jobs)
 	{
-		if (!jobs.Any())
+		List<JobModel> jobsToAdd = jobs.SelectMany(x => x).ToList();
+
+		if (!jobsToAdd.Any())
 		{
 			return;
 		}
@@ -86,9 +105,13 @@ public static class RecurringJobRegistrationExtensions
 	public static IServiceCollection RegisterRecurringJobsFrom").Append(assemblyName?.Sanitize(string.Empty) ?? "Assembly").Append(@"(this IServiceCollection sc)
 	{
 ");
-		foreach (JobModel job in jobs.OrderBy(r => r!.JobId))
+		foreach (JobModel job in jobsToAdd.OrderBy(r => r.FullClassName))
 		{
-			sb.Append("\t\tRecurringJob.AddOrUpdate<").Append(job.FullClassName).Append(">(\"").Append(job.JobId).Append("\"").Append(", x => x.Execute(), \"").Append(job.Cron).Append("\");").Append("\r\n");
+			sb
+				.Append("\t\tRecurringJob.AddOrUpdate<").Append(job.FullClassName).Append(">(\"").Append(job.JobId).Append("\", \"").Append(job.Queue).Append("\", x => x.Execute(), \"").Append(job.Cron).Append("\", new RecurringJobOptions").Append("\r\n")
+				.Append("\t\t{\r\n")
+				.Append("\t\t\tTimeZone = TimeZoneInfo.FindSystemTimeZoneById(\"").Append(job.TimeZone).Append("\")\r\n")
+				.Append("\t\t});\r\n");
 		}
 		sb.Append(@"
 		return sc;
