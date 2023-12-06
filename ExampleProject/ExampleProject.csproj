@@ -11,8 +11,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Scr\Generator\IeuanWalker.Hangfire.RecurringJob.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-		<ProjectReference Include="..\Scr\IeuanWalker.Hangfire.RecurringJob.Attributes\IeuanWalker.Hangfire.RecurringJob.Attributes.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true"  />
+		<ProjectReference Include="..\Scr\IeuanWalker.Hangfire.RecurringJob.Attributes\IeuanWalker.Hangfire.RecurringJob.Attributes.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+		<ProjectReference Include="..\Scr\IeuanWalker.Hangfire.RecurringJob.Generator\IeuanWalker.Hangfire.RecurringJob.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
 </Project>
