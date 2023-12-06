@@ -1,7 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Text;
-using IeuanWalker.Hangfire.RecurringJob.Generator.Attributes;
 using IeuanWalker.Hangfire.RecurringJob.Generator.Helpers;
 using IeuanWalker.Hangfire.RecurringJob.Generator.Models;
 using Microsoft.CodeAnalysis;
@@ -19,8 +18,6 @@ public class RecuringJobGenerator : IIncrementalGenerator
 
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
-		context.RegisterPostInitializationOutput(ctx => ctx.AddSource("RecurringJobAttribute.g.cs", SourceText.From(RecurringJobAttribute.Attribute, Encoding.UTF8)));
-
 		IncrementalValueProvider<ImmutableArray<JobModel?>> provider = context.SyntaxProvider
 						 .ForAttributeWithMetadataName(fullAttribute, Match, Transform)
 						 .Where(static r => r is not null)

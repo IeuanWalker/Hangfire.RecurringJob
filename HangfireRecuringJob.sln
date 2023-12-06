@@ -9,6 +9,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scr", "scr", "{DF161677-40E
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExampleProject", "ExampleProject\ExampleProject.csproj", "{276534E1-D6E4-4992-B52B-126939C73301}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IeuanWalker.Hangfire.RecurringJob.Attributes", "Scr\IeuanWalker.Hangfire.RecurringJob.Attributes\IeuanWalker.Hangfire.RecurringJob.Attributes.csproj", "{037C13C3-1F24-4E17-9A64-56AD518C6608}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,12 +25,17 @@ Global
 		{276534E1-D6E4-4992-B52B-126939C73301}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{276534E1-D6E4-4992-B52B-126939C73301}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{276534E1-D6E4-4992-B52B-126939C73301}.Release|Any CPU.Build.0 = Release|Any CPU
+		{037C13C3-1F24-4E17-9A64-56AD518C6608}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{037C13C3-1F24-4E17-9A64-56AD518C6608}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{037C13C3-1F24-4E17-9A64-56AD518C6608}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{037C13C3-1F24-4E17-9A64-56AD518C6608}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{715CD3C1-2233-4192-9AD3-CD7B0B4329E4} = {DF161677-40E6-4776-A1F5-9BD5E040040F}
+		{037C13C3-1F24-4E17-9A64-56AD518C6608} = {DF161677-40E6-4776-A1F5-9BD5E040040F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {18B4BEFA-67E6-4E38-B6AF-4F26D56863DA}
