@@ -1,6 +1,6 @@
 ﻿using IeuanWalker.Hangfire.RecurringJob.Attributes;
 
-namespace TestSolution;
+namespace ExampleProject;
 
 [RecurringJob]
 public class RecurringJob1
