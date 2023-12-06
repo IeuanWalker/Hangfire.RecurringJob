@@ -61,12 +61,12 @@ public class RecuringJobGenerator : IIncrementalGenerator
 		}
 
 		assemblyName = context.SemanticModel.Compilation.AssemblyName;
-		string jobId = (string?)attribute.NamedArguments.FirstOrDefault(a => a.Key == "JobId").Value.Value ?? "Test"; // TODO: Use class name if jobId is null
+		string jobId = (string?)attribute.NamedArguments.FirstOrDefault(a => a.Key == "JobId").Value.Value ?? context.TargetSymbol.Name;
 		string cron = (string)attribute.NamedArguments.FirstOrDefault(a => a.Key == "Cron").Value.Value!;
 		string queue = (string)attribute.NamedArguments.FirstOrDefault(a => a.Key == "Queue").Value.Value!;
 		string timeZone = (string)attribute.NamedArguments.FirstOrDefault(a => a.Key == "TimeZone").Value.Value!;
 
-		return new JobModel(context.TargetSymbol.Name, jobId, cron, queue, timeZone);
+		return new JobModel(context.TargetSymbol.ToString(), jobId, cron, queue, timeZone);
 	}
 
 	static void Generate(SourceProductionContext context, ImmutableArray<JobModel> jobs)
