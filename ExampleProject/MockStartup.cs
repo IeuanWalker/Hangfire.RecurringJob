@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace TestSolution;
+namespace ExampleProject;
 
 public class MockStartup
 {
@@ -13,6 +13,6 @@ public class MockStartup
 
 	public void Method1()
 	{
-		_serviceCollection.RegisterRecurringJobsFromTestSolution();
+		_serviceCollection.RegisterRecurringJobsFromExampleProject();
 	}
 }
