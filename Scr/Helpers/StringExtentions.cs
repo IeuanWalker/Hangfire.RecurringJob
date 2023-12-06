@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace IeuanWalker.Hangfire.Helpers;
+namespace IeuanWalker.Hangfire.RecurringJob.Generator.Helpers;
 
 static class Extensions
 {

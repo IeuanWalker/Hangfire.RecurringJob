@@ -1,15 +1,15 @@
 ﻿using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Text;
-using IeuanWalker.Hangfire.Attributes;
-using IeuanWalker.Hangfire.Helpers;
-using IeuanWalker.Hangfire.Models;
+using IeuanWalker.Hangfire.RecurringJob.Generator.Attributes;
+using IeuanWalker.Hangfire.RecurringJob.Generator.Helpers;
+using IeuanWalker.Hangfire.RecurringJob.Generator.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
-namespace IeuanWalker.Hangfire;
+namespace IeuanWalker.Hangfire.RecurringJob.Generator;
 
 [Generator(LanguageNames.CSharp)]
 public class RecuringJobGenerator : IIncrementalGenerator
