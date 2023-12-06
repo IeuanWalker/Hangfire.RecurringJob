@@ -1,16 +1,18 @@
-﻿namespace TestSolution;
+﻿using Microsoft.Extensions.DependencyInjection;
 
-//public class MockStartup
-//{
-//	readonly IServiceCollection _serviceCollection;
+namespace TestSolution;
 
-//	public MockStartup(IServiceCollection serviceCollection)
-//	{
-//		_serviceCollection = serviceCollection;
-//	}
+public class MockStartup
+{
+	readonly IServiceCollection _serviceCollection;
 
-//	public void Method1()
-//	{
-//		//_serviceCollection.RegisterRecurringJobsFromTestSolution();
-//	}
-//}
+	public MockStartup(IServiceCollection serviceCollection)
+	{
+		_serviceCollection = serviceCollection;
+	}
+
+	public void Method1()
+	{
+		_serviceCollection.RegisterRecurringJobsFromTestSolution();
+	}
+}
