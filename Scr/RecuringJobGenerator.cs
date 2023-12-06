@@ -7,6 +7,7 @@ using IeuanWalker.Hangfire.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 
 namespace IeuanWalker.Hangfire;
 
@@ -18,7 +19,7 @@ public class RecuringJobGenerator : IIncrementalGenerator
 
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
-		context.RegisterPostInitializationOutput(ctx => ctx.AddSource("RecurringJobAttribute.g.cs", RecurringJobAttribute.Attribute));
+		context.RegisterPostInitializationOutput(ctx => ctx.AddSource("RecurringJobAttribute.g.cs", SourceText.From(RecurringJobAttribute.Attribute, Encoding.UTF8)));
 
 		IncrementalValueProvider<ImmutableArray<JobModel?>> provider = context.SyntaxProvider
 						 .ForAttributeWithMetadataName(fullAttribute, Match, Transform)
@@ -100,6 +101,6 @@ public class RecuringJobGenerator : IIncrementalGenerator
 
 		Debug.WriteLine(sb.ToString());
 
-		context.AddSource("RecurringJobRegistrationExtensions.g.cs", sb.ToString());
+		context.AddSource("RecurringJobRegistrationExtensions.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
 	}
 }
