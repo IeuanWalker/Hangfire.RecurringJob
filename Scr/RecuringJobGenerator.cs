@@ -15,7 +15,7 @@ namespace IeuanWalker.Hangfire;
 public class RecuringJobGenerator : IIncrementalGenerator
 {
 	static string? assemblyName;
-	const string fullAttribute = "IeuanWalker.Hangfire.Attributes.RecurringJobAttribute";
+	const string fullAttribute = "IeuanWalker.Hangfire.RecurringJob.Attributes.RecurringJobAttribute";
 
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{

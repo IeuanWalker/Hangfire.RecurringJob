@@ -1,4 +1,4 @@
-﻿using IeuanWalker.Hangfire.Attributes;
+﻿using IeuanWalker.Hangfire.RecurringJob.Attributes;
 
 namespace TestSolution;
 
