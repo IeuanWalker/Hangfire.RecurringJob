@@ -12,7 +12,7 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Scr\IeuanWalker.Hangfire.RecurringJob.Generator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+		<ProjectReference Include="..\Scr\Generator\IeuanWalker.Hangfire.RecurringJob.Generator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
 	</ItemGroup>
 
 </Project>
