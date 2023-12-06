@@ -1,18 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-	<TargetFramework>net8.0</TargetFramework>
-	<ImplicitUsings>enable</ImplicitUsings>
-	<Nullable>enable</Nullable>
-  </PropertyGroup>
-
-  <ItemGroup>
-	<PackageReference Include="Hangfire" Version="1.8.5" />
-	<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
-  </ItemGroup>
+	<PropertyGroup>
+	  <TargetFramework>net8.0</TargetFramework>
+	  <ImplicitUsings>enable</ImplicitUsings>
+	  <Nullable>enable</Nullable>
+	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Scr\Generator\IeuanWalker.Hangfire.RecurringJob.Generator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+	<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Scr\Generator\IeuanWalker.Hangfire.RecurringJob.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\Scr\IeuanWalker.Hangfire.RecurringJob.Attributes\IeuanWalker.Hangfire.RecurringJob.Attributes.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true"  />
 	</ItemGroup>
 
 </Project>
