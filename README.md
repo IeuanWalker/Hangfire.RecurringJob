@@ -1,6 +1,6 @@
 # Hangfire.RecurringJob
 
-This is the a package that automatically registers hangfire recurring jobs, using source generator to build a single exention method to register the jobs in the progam.cs
+This is a package that automatically generates the hanfire recurring jobs `AddOrUpdate` code, using source generators.
 
 ## How to use it?
 1. Install the [NuGet package](#) into your project.
