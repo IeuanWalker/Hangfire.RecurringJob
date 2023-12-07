@@ -9,14 +9,17 @@ public sealed class RecurringJobAttribute : Attribute
 	/// The identifier of the RecurringJob
 	/// </summary>
 	public string? JobId { get; set; }
+
 	/// <summary>
 	/// Cron expressions
 	/// </summary>
 	public string Cron { get; set; }
+
 	/// <summary>
 	/// Queue name
 	/// </summary>
 	public string Queue { get; set; }
+
 	/// <summary>
 	/// Converts to <see cref="TimeZoneInfo"/> via method <seealso cref="TimeZoneInfo.FindSystemTimeZoneById(string)"/>,
 	/// default value is <see cref="TimeZoneInfo.Utc"/>
@@ -33,12 +36,14 @@ public sealed class RecurringJobAttribute : Attribute
 	/// </summary>
 	/// <param name="cron">Cron expressions</param>
 	public RecurringJobAttribute(string cron) : this(cron, EnqueuedState.DefaultQueue) { }
+
 	/// <summary>
 	/// Initializes a new instance of the <see cref="RecurringJobAttribute"/>
 	/// </summary>
 	/// <param name="cron">Cron expressions</param>
 	/// <param name="queue">Queue name</param>
 	public RecurringJobAttribute(string cron, string queue) : this(cron, "UTC", queue) { }
+
 	/// <summary>
 	/// Initializes a new instance of the <see cref="RecurringJobAttribute"/>
 	/// </summary>

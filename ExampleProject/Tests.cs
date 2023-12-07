@@ -2,7 +2,6 @@
 
 namespace ExampleProject;
 
-
 [RecurringJob("* * * *")]
 public class RecurringJob1
 {
