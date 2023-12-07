@@ -51,7 +51,7 @@ public class RecurringJob4
 Once a `RecurringJob` attribute has been added to your project a exention method will automatically be created to be added to you progam.cs
 > The extention method name convention is AddRecurringJobsFrom + your assebly name
 ```csharp
-services.AddRecurringJobsFromExampleProject();
+app.AddRecurringJobsFromExampleProject();
 ```
 
 Here is an example of what it looks like in use - 
