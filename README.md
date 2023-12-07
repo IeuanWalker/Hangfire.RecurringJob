@@ -55,5 +55,6 @@ services.AddRecurringJobsFromExampleProject();
 ```
 
 Here is an example of what it looks like in use - 
-![image](https://github.com/IeuanWalker/Hangfire.RecurringJob.Generator/assets/6544051/761f2076-bca9-4637-a7f9-c721b5799b67)
+![image](https://github.com/IeuanWalker/Hangfire.RecurringJob.Generator/assets/6544051/cef12771-5178-46cf-9264-dbb54654efc6)
+
 
