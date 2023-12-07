@@ -56,6 +56,8 @@ app.AddRecurringJobsFromExampleProject();
 
 ## Example
 Here is an example of what it looks like in use - 
+> Left is actual code, right is the generated code
+
 ![image](https://github.com/IeuanWalker/Hangfire.RecurringJob.Generator/assets/6544051/cef12771-5178-46cf-9264-dbb54654efc6)
 
 
