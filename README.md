@@ -3,12 +3,12 @@
 This is the a package that automatically registers hangfire recurring jobs, using source generator to build a single exention method to register the jobs in the progam.cs
 
 ## How to use it?
-Install the [NuGet package](#) into your project
+1. Install the [NuGet package](#) into your project.
 ```
 Install-Package IeuanWalker.Hangfire.RecurringJob
 ```
 
-The attribute works on a class level, and the class just needs and `Execute()` method.
+2. Add the `RecurringJob` attribute to a class, and create a `Execute()` method.
 ```csharp
 [RecurringJob]
 public class RecurringJob1
@@ -47,9 +47,9 @@ public class RecurringJob4
 	}
 }
 ```
-
-Once a `RecurringJob` attribute has been added to your project a exention method for `IApplicationBuilder` will automatically be created, so you can register the recurring jobs in your progam.cs
-> The extention method name convention is AddRecurringJobsFrom + your assebly name
+3. Register the recurring jobs
+> Once a `RecurringJob` attribute has been added to a class in your project a exention method for `IApplicationBuilder` will automatically be created.
+> The extention method name convention is AddRecurringJobsFrom + your assebly name.
 ```csharp
 app.AddRecurringJobsFromExampleProject();
 ```
