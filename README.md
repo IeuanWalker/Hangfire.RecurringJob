@@ -54,6 +54,7 @@ Once a `RecurringJob` attribute has been added to your project a exention method
 app.AddRecurringJobsFromExampleProject();
 ```
 
+## Example
 Here is an example of what it looks like in use - 
 ![image](https://github.com/IeuanWalker/Hangfire.RecurringJob.Generator/assets/6544051/cef12771-5178-46cf-9264-dbb54654efc6)
 
