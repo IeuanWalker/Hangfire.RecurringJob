@@ -18,8 +18,8 @@
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/IeuanWalker/Hangfire.RecurringJob.Generator</RepositoryUrl>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
+    <Version>1.0.2</Version>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	</PropertyGroup>
 
 	<ItemGroup>
