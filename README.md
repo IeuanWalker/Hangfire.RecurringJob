@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Build](https://github.com/IeuanWalker/Hangfire.RecurringJob/actions/workflows/build.yml/badge.svg)](https://github.com/IeuanWalker/Hangfire.RecurringJob/actions/workflows/build.yml)
 
-This is a package that automatically generates the hangfire recurring jobs `AddOrUpdate` code, using source generators.
+Automatically generates the recurring job registration code using source generators
 
 ## How to use it?
 1. Install the [NuGet package](#) into your project.
