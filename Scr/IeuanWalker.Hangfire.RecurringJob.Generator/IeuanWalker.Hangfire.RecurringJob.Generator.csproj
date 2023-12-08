@@ -11,18 +11,28 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<PackageId>IeuanWalker.Hangfire.RecurringJob</PackageId>
-		<PackageTags>Hangfire;RecurringJob;SoruceGenerator</PackageTags>
+    <Version>1.0.0</Version>
+    <PackageId>IeuanWalker.Hangfire.RecurringJob</PackageId>
+    <Description>This is a package that automatically generates the hangfire recurring jobs AddOrUpdate code, using source generators.</Description>
+		<PackageTags>Hangfire;RecurringJob;Source Generator</PackageTags>
 		<Authors>Ieuan Walker</Authors>
 		<PackageProjectUrl>https://github.com/IeuanWalker/Hangfire.RecurringJob.Generator</PackageProjectUrl>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/IeuanWalker/Hangfire.RecurringJob.Generator</RepositoryUrl>
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <Version>1.0.0</Version>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	</PropertyGroup>
 
-	<ItemGroup>
+  <ItemGroup>
+    <None Include="../../LICENSE" Pack="true" PackagePath="\" />
+    <None Include="../../README.md" Pack="true" PackagePath="\" />
+    <None Include="../../icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.7.0" />
 	</ItemGroup>
