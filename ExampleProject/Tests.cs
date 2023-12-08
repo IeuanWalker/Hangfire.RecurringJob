@@ -2,7 +2,7 @@
 
 namespace ExampleProject;
 
-[RecurringJob("* * * *")]
+[RecurringJob]
 public class RecurringJob1
 {
 	public Task Execute()
@@ -11,8 +11,17 @@ public class RecurringJob1
 	}
 }
 
-[RecurringJob("* * * *", "Priority")]
+[RecurringJob("* * * *")]
 public class RecurringJob2
+{
+	public void Execute()
+	{
+		throw new NotImplementedException();
+	}
+}
+
+[RecurringJob("* * * *", "Priority")]
+public class RecurringJob3
 {
 	public void Execute()
 	{
@@ -22,15 +31,6 @@ public class RecurringJob2
 
 [RecurringJob]
 [RecurringJob("*/5 * * * *", "GMT", "Priority", "DataRetention")]
-public class RecurringJob3
-{
-	public void Execute()
-	{
-		throw new NotImplementedException();
-	}
-}
-
-[RecurringJob("* * * *")]
 public class RecurringJob4
 {
 	public void Execute()

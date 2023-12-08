@@ -1,24 +1,18 @@
-﻿using Hangfire;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.Builder;
 
 namespace ExampleProject;
 
 public class MockStartup
 {
-	readonly IServiceCollection _serviceCollection;
+	readonly IApplicationBuilder _app;
 
-	public MockStartup(IServiceCollection serviceCollection)
+	public MockStartup(IApplicationBuilder app)
 	{
-		_serviceCollection = serviceCollection;
+		_app = app;
 	}
 
-	public void Method1()
+	public void Startup()
 	{
-		_serviceCollection.RegisterRecurringJobsFromExampleProject();
-
-		RecurringJob.AddOrUpdate<RecurringJob1>("RecurringJob1", "", x => x.Execute(), "0 0 * * *", new RecurringJobOptions
-		{
-			TimeZone = TimeZoneInfo.FindSystemTimeZoneById("UTC")
-		});
+		_app.AddRecurringJobsFromExampleProject();
 	}
 }
