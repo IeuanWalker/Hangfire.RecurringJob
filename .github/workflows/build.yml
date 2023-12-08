@@ -13,7 +13,7 @@ on:
 
 env:
   NET_VERSION: 8.0.100
-  NUGET_PATH: './**/IeuanWalker.Hangfire.RecurringJob.Generator.1.0.0.nupkg'
+  NUGET_PATH: './**/IeuanWalker.Hangfire.RecurringJob.1.0.0.nupkg'
   PROJECT_PATH: 'Scr/IeuanWalker.Hangfire.RecurringJob.Generator/IeuanWalker.Hangfire.RecurringJob.Generator.csproj'
   
 jobs:
