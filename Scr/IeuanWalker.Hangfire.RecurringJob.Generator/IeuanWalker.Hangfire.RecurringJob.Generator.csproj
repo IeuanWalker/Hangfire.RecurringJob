@@ -18,7 +18,7 @@
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/IeuanWalker/Hangfire.RecurringJob.Generator</RepositoryUrl>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <Version>1.0.2</Version>
+    <Version>1.0.0</Version>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	</PropertyGroup>
 
