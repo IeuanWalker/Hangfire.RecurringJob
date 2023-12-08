@@ -1,4 +1,5 @@
-# Hangfire.RecurringJob
+# Hangfire.RecurringJob [![Nuget](https://img.shields.io/nuget/v/IeuanWalker.Hangfire.RecurringJob)](https://www.nuget.org/packages/IeuanWalker.Hangfire.RecurringJob) [![Nuget](https://img.shields.io/nuget/dt/IeuanWalker.Hangfire.RecurringJob)](https://www.nuget.org/packages/IeuanWalker.Hangfire.RecurringJob) 
+
 [![Build](https://github.com/IeuanWalker/Hangfire.RecurringJob/actions/workflows/build.yml/badge.svg)](https://github.com/IeuanWalker/Hangfire.RecurringJob/actions/workflows/build.yml)
 
 This is a package that automatically generates the hanfire recurring jobs `AddOrUpdate` code, using source generators.
