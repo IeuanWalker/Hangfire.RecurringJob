@@ -12,7 +12,7 @@ on:
     - cron:  '0 0 1 */3 *'    # Every 3 months
 
 env:
-  NET_VERSION: 8.0.0
+  NET_VERSION: 8.0.100
   NUGET_PATH: './**/IeuanWalker.Hangfire.RecurringJob.Generator.1.0.0.nupkg'
   PROJECT_PATH: 'Scr/IeuanWalker.Hangfire.RecurringJob.Generator/IeuanWalker.Hangfire.RecurringJob.Generator.csproj'
   
