@@ -6,7 +6,7 @@
 Automatically generates the recurring job registration code using source generators
 
 ## How to use it?
-1. Install the [NuGet package](#) into your project.
+1. Install the [NuGet package](https://www.nuget.org/packages/IeuanWalker.Hangfire.RecurringJob) into your project.
 ```
 Install-Package IeuanWalker.Hangfire.RecurringJob
 ```
