@@ -98,7 +98,7 @@ public class RecuringJobGenerator : IIncrementalGenerator
 using Hangfire;
 using Microsoft.AspNetCore.Builder;");
 
-		sb.Append("namespace ").Append(assemblyName).Append(@";
+		sb.Append("\r\n\r\nnamespace ").Append(assemblyName).Append(@";
 
 public static class RecurringJobRegistrationExtensions
 {
