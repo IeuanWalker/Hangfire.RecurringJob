@@ -77,7 +77,7 @@ public class RecuringJobGenerator : IIncrementalGenerator
 					errors.Add("RJG001: Missing Execute Method");
 				}
 
-				if(!TimeZoneInfo.GetSystemTimeZones().Any(tz => tz.Id == timeZone))
+				if(!IsValidTimeZone(timeZone))
 				{
 					errors.Add($"RJG002: Invalid TimeZone - {timeZone}");
 				}
@@ -177,6 +177,14 @@ namespace ").Append(assemblyName).Append(@"
 
 	static bool IsValidTimeZone(string timeZone)
 	{
-		return TimeZoneInfo.GetSystemTimeZones().Any(tz => tz.Id == timeZone);
+		try
+		{
+			TimeZoneInfo.FindSystemTimeZoneById(timeZone);
+			return true;
+		}
+		catch(Exception)
+		{
+			return false;
+		}
 	}
 }

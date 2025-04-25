@@ -31,6 +31,7 @@ public class RecurringJob3
 
 [RecurringJob]
 [RecurringJob("*/5 * * * *", "GMT Standard Time", "Priority", "DataRetention")]
+[RecurringJob("*/5 * * * *", "GMT", "Priority", "DataRetention")]
 public class RecurringJob4
 {
 	public void Execute()
@@ -42,7 +43,7 @@ public class RecurringJob4
 /// <summary>
 /// Fix for reported issue - https://github.com/IeuanWalker/Hangfire.RecurringJob/issues/5
 /// </summary>
-[RecurringJob("*/5 * * * *", "GMT Standard Time", "Priority", "Data\"Retention")]
+[RecurringJob("*/5 * * * *", "Europe/London", "Priority", "Data\"Retention")]
 public class RecurringJob5
 {
 	public void Execute()
