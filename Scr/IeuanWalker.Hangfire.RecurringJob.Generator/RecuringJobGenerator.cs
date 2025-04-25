@@ -84,7 +84,7 @@ public class RecuringJobGenerator : IIncrementalGenerator
 
 				if(!IsValidTimeZone(timeZone))
 				{
-					errors.Add("RJG002: Invalid TimeZone");
+					errors.Add($"RJG002: Invalid TimeZone - {timeZone}");
 				}
 
 				if(errors.Any())
@@ -123,7 +123,7 @@ public class RecuringJobGenerator : IIncrementalGenerator
 				{
 					diagnosticId = "RJG002";
 					title = "Invalid TimeZone";
-					messageFormat = "The TimeZone specified for the class '{0}' is invalid.";
+					messageFormat = "The TimeZone (" + error.Split('-').LastOrDefault()?.Trim() + ") specified for the class '{0}' is invalid.";
 				}
 
 				context.ReportDiagnostic(Diagnostic.Create(
