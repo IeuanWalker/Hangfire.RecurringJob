@@ -30,7 +30,7 @@ public class RecurringJob3
 }
 
 [RecurringJob]
-[RecurringJob("*/5 * * * *", "GMT", "Priority", "DataRetention")]
+[RecurringJob("*/5 * * * *", "GMT Standard Time", "Priority", "DataRetention")]
 public class RecurringJob4
 {
 	public void Execute()
@@ -39,10 +39,32 @@ public class RecurringJob4
 	}
 }
 
-[RecurringJob]
+/// <summary>
+/// Fix for reported issue - https://github.com/IeuanWalker/Hangfire.RecurringJob/issues/5
+/// </summary>
+[RecurringJob("*/5 * * * *", "GMT Standard Time", "Priority", "Data\"Retention")]
 public class RecurringJob5
 {
+	public void Execute()
+	{
+		throw new NotImplementedException();
+	}
+}
+
+[RecurringJob]
+public class RecurringJob6
+{
 	public void MissingExecuteMethod()
+	{
+		throw new NotImplementedException();
+	}
+}
+
+[RecurringJob]
+[RecurringJob("*/5 * * * *", "ABC", "Priority", "DataRetention")]
+public class RecurringJob7
+{
+	public void Execute()
 	{
 		throw new NotImplementedException();
 	}

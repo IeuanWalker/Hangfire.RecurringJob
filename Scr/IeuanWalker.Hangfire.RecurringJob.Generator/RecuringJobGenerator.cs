@@ -4,6 +4,7 @@ using Hangfire.States;
 using IeuanWalker.Hangfire.RecurringJob.Generator.Helpers;
 using IeuanWalker.Hangfire.RecurringJob.Generator.Models;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 
 namespace IeuanWalker.Hangfire.RecurringJob.Generator;
@@ -79,6 +80,13 @@ public class RecuringJobGenerator : IIncrementalGenerator
 					continue;
 				}
 
+				// Validate the timeZone
+				if(!IsValidTimeZone(timeZone))
+				{
+					invalidClasses.Add(classSymbol);
+					continue;
+				}
+
 				validJobs.Add(new JobModel(context.TargetSymbol.ToString(), jobId, cron, queue, timeZone));
 			}
 		}
@@ -90,17 +98,36 @@ public class RecuringJobGenerator : IIncrementalGenerator
 	{
 		foreach(INamedTypeSymbol? invalidClass in jobs.SelectMany(x => x.InvalidClasses))
 		{
-			// Report a diagnostic error for classes missing the Execute method
-			context.ReportDiagnostic(Diagnostic.Create(
-				new DiagnosticDescriptor(
-					id: "RJG001",
-					title: "Missing Execute Method",
-					messageFormat: "The class '{0}' must implement a parameterless method named 'Execute'.",
-					category: "RecurringJobGenerator",
-					DiagnosticSeverity.Error,
-					isEnabledByDefault: true),
-				invalidClass.Locations.FirstOrDefault(),
-				invalidClass.Name));
+			// Check if the invalid class is missing the Execute method
+			if(invalidClass.GetMembers()
+				.OfType<IMethodSymbol>()
+				.All(m => m.Name != "Execute" || m.Parameters.Length != 0))
+			{
+				context.ReportDiagnostic(Diagnostic.Create(
+					new DiagnosticDescriptor(
+						id: "RJG001",
+						title: "Missing Execute Method",
+						messageFormat: "The class '{0}' must implement a parameterless method named 'Execute'.",
+						category: "RecurringJobGenerator",
+						DiagnosticSeverity.Error,
+						isEnabledByDefault: true),
+					invalidClass.Locations.FirstOrDefault(),
+					invalidClass.Name));
+			}
+			else
+			{
+				// Report invalid TimeZone error
+				context.ReportDiagnostic(Diagnostic.Create(
+					new DiagnosticDescriptor(
+						id: "RJG002",
+						title: "Invalid TimeZone",
+						messageFormat: "The TimeZone specified for the class '{0}' is invalid.",
+						category: "RecurringJobGenerator",
+						DiagnosticSeverity.Error,
+						isEnabledByDefault: true),
+					invalidClass.Locations.FirstOrDefault(),
+					invalidClass.Name));
+			}
 		}
 
 
@@ -128,9 +155,12 @@ public static class RecurringJobRegistrationExtensions
 		foreach(JobModel job in jobsToAdd.OrderBy(r => r.FullClassName))
 		{
 			sb
-				.Append("\t\tRecurringJob.AddOrUpdate<").Append(job.FullClassName).Append(">(\"").Append(job.JobId).Append("\", \"").Append(job.Queue).Append("\", x => x.Execute(), \"").Append(job.Cron).Append("\", new RecurringJobOptions").Append("\r\n")
+				.Append("\t\tRecurringJob.AddOrUpdate<").Append(job.FullClassName).Append(">(")
+				.Append(SymbolDisplay.FormatLiteral(job.JobId, true)).Append(", ")
+				.Append(SymbolDisplay.FormatLiteral(job.Queue, true)).Append(", x => x.Execute(), ")
+				.Append(SymbolDisplay.FormatLiteral(job.Cron, true)).Append(", new RecurringJobOptions").Append("\r\n")
 				.Append("\t\t{\r\n")
-				.Append("\t\t\tTimeZone = TimeZoneInfo.FindSystemTimeZoneById(\"").Append(job.TimeZone).Append("\")\r\n")
+				.Append("\t\t\tTimeZone = TimeZoneInfo.FindSystemTimeZoneById(").Append(SymbolDisplay.FormatLiteral(job.TimeZone, true)).Append(")\r\n")
 				.Append("\t\t});\r\n");
 		}
 		sb.Append(@"
@@ -139,5 +169,10 @@ public static class RecurringJobRegistrationExtensions
 }");
 
 		context.AddSource("RecurringJobRegistrationExtensions.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+	}
+
+	static bool IsValidTimeZone(string timeZone)
+	{
+		return TimeZoneInfo.GetSystemTimeZones().Any(tz => tz.Id == timeZone);
 	}
 }
