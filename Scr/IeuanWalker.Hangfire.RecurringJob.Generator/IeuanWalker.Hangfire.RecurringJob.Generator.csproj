@@ -28,8 +28,7 @@
 
   <ItemGroup>
     <None Include="../../LICENSE" Pack="true" PackagePath="\" />
-    <None Include="../../README.md" Pack="true" PackagePath="\" />
-    <None Include="../../icon.png" Pack="true" PackagePath="\" />
+    @@ -33,21 +33,21 @@
   </ItemGroup>
 
   <ItemGroup>
