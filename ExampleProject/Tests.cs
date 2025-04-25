@@ -69,11 +69,11 @@ public class RecurringJob5
 //	}
 //}
 
-//[RecurringJob("*/5 * * * *", "ABC", "Priority", "DataRetention")]
-//public class RecurringJob8
-//{
-//	public void AllErorrs()
-//	{
-//		throw new NotImplementedException();
-//	}
-//}
+[RecurringJob("*/5 * * * *", "ABC", "Priority", "DataRetention")]
+public class RecurringJob8
+{
+	public void AllErrors()
+	{
+		throw new NotImplementedException();
+	}
+}
