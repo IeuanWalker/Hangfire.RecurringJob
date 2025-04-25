@@ -38,3 +38,12 @@ public class RecurringJob4
 		throw new NotImplementedException();
 	}
 }
+
+[RecurringJob]
+public class RecurringJob5
+{
+	public void MissingExecuteMethod()
+	{
+		throw new NotImplementedException();
+	}
+}

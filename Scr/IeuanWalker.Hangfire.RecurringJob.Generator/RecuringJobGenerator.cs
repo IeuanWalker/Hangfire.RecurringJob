@@ -4,8 +4,6 @@ using Hangfire.States;
 using IeuanWalker.Hangfire.RecurringJob.Generator.Helpers;
 using IeuanWalker.Hangfire.RecurringJob.Generator.Models;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
 namespace IeuanWalker.Hangfire.RecurringJob.Generator;
@@ -18,9 +16,9 @@ public class RecuringJobGenerator : IIncrementalGenerator
 
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
-		IncrementalValueProvider<ImmutableArray<List<JobModel>?>> provider = context.SyntaxProvider
+		IncrementalValueProvider<ImmutableArray<(List<JobModel> ValidJobs, List<INamedTypeSymbol> InvalidClasses)>> provider = context.SyntaxProvider
 						 .ForAttributeWithMetadataName(fullAttribute, Match, Transform)
-						 .Where(static r => r is not null)
+						 .Where(static r => r.ValidJobs.Any() || r.InvalidClasses.Any())
 						 .Collect();
 
 		context.RegisterSourceOutput(provider, Generate!);
@@ -31,27 +29,20 @@ public class RecuringJobGenerator : IIncrementalGenerator
 		return true;
 	}
 
-	static List<JobModel>? Transform(GeneratorAttributeSyntaxContext context, CancellationToken _)
+	static (List<JobModel> ValidJobs, List<INamedTypeSymbol> InvalidClasses) Transform(GeneratorAttributeSyntaxContext context, CancellationToken _)
 	{
-		IEnumerable<SyntaxNode> ancestors = context.TargetNode.Ancestors();
-		if (ancestors.FirstOrDefault(x => x.IsKind(SyntaxKind.CompilationUnit)) is not CompilationUnitSyntax compilationUnit)
-		{
-			return null;
-		}
-
-		if (compilationUnit.Members.FirstOrDefault(m => m.IsKind(SyntaxKind.NamespaceDeclaration) || m.IsKind(SyntaxKind.FileScopedNamespaceDeclaration)) is not BaseNamespaceDeclarationSyntax)
-		{
-			return null;
-		}
-
 		INamedTypeSymbol? markerAttribute = context.SemanticModel.Compilation.GetTypeByMetadataName(fullAttribute);
-		if (markerAttribute is null)
+		if(markerAttribute is null)
 		{
-			return null;
+			return (new List<JobModel>(), new List<INamedTypeSymbol>());
 		}
 
-		List<JobModel> result = [];
-		foreach (ImmutableArray<TypedConstant> constructorArguments in context.Attributes.Where(a => a?.AttributeClass is not null && a.AttributeClass.Equals(markerAttribute, SymbolEqualityComparer.Default)).Select(x => x.ConstructorArguments))
+		List<JobModel> validJobs = [];
+		List<INamedTypeSymbol> invalidClasses = [];
+
+		foreach(ImmutableArray<TypedConstant> constructorArguments in context.Attributes
+			.Where(a => a?.AttributeClass is not null && a.AttributeClass.Equals(markerAttribute, SymbolEqualityComparer.Default))
+			.Select(x => x.ConstructorArguments))
 		{
 			assemblyName = context.SemanticModel.Compilation.AssemblyName;
 			string jobId = context.TargetSymbol.Name;
@@ -59,7 +50,7 @@ public class RecuringJobGenerator : IIncrementalGenerator
 			string queue = EnqueuedState.DefaultQueue;
 			string timeZone = "UTC";
 
-			switch (constructorArguments.Length)
+			switch(constructorArguments.Length)
 			{
 				case 1:
 					cron = constructorArguments[0].Value?.ToString() ?? cron;
@@ -76,17 +67,46 @@ public class RecuringJobGenerator : IIncrementalGenerator
 					break;
 			}
 
-			result.Add(new JobModel(context.TargetSymbol.ToString(), jobId, cron, queue, timeZone));
+			if(context.TargetSymbol is INamedTypeSymbol classSymbol)
+			{
+				bool hasExecuteMethod = classSymbol.GetMembers()
+					.OfType<IMethodSymbol>()
+					.Any(m => m.Name == "Execute" && m.Parameters.Length == 0);
+
+				if(!hasExecuteMethod)
+				{
+					invalidClasses.Add(classSymbol);
+					continue;
+				}
+
+				validJobs.Add(new JobModel(context.TargetSymbol.ToString(), jobId, cron, queue, timeZone));
+			}
 		}
 
-		return result.Count > 0 ? result : null;
+		return (validJobs, invalidClasses);
 	}
 
-	static void Generate(SourceProductionContext context, ImmutableArray<List<JobModel>> jobs)
+	static void Generate(SourceProductionContext context, ImmutableArray<(List<JobModel> ValidJobs, List<INamedTypeSymbol> InvalidClasses)> jobs)
 	{
-		List<JobModel> jobsToAdd = jobs.SelectMany(x => x).ToList();
+		foreach(INamedTypeSymbol? invalidClass in jobs.SelectMany(x => x.InvalidClasses))
+		{
+			// Report a diagnostic error for classes missing the Execute method
+			context.ReportDiagnostic(Diagnostic.Create(
+				new DiagnosticDescriptor(
+					id: "RJG001",
+					title: "Missing Execute Method",
+					messageFormat: "The class '{0}' must implement a parameterless method named 'Execute'.",
+					category: "RecurringJobGenerator",
+					DiagnosticSeverity.Error,
+					isEnabledByDefault: true),
+				invalidClass.Locations.FirstOrDefault(),
+				invalidClass.Name));
+		}
 
-		if (!jobsToAdd.Any())
+
+		List<JobModel> jobsToAdd = jobs.SelectMany(x => x.ValidJobs).ToList();
+
+		if(!jobsToAdd.Any())
 		{
 			return;
 		}
@@ -105,7 +125,7 @@ public static class RecurringJobRegistrationExtensions
 	public static IApplicationBuilder AddRecurringJobsFrom").Append(assemblyName?.Sanitize(string.Empty) ?? "Assembly").Append(@"(this IApplicationBuilder app)
 	{
 ");
-		foreach (JobModel job in jobsToAdd.OrderBy(r => r.FullClassName))
+		foreach(JobModel job in jobsToAdd.OrderBy(r => r.FullClassName))
 		{
 			sb
 				.Append("\t\tRecurringJob.AddOrUpdate<").Append(job.FullClassName).Append(">(\"").Append(job.JobId).Append("\", \"").Append(job.Queue).Append("\", x => x.Execute(), \"").Append(job.Cron).Append("\", new RecurringJobOptions").Append("\r\n")
