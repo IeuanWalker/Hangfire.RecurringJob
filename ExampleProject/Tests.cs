@@ -51,29 +51,29 @@ public class RecurringJob5
 	}
 }
 
-[RecurringJob]
-public class RecurringJob6
-{
-	public void MissingExecuteMethod()
-	{
-		throw new NotImplementedException();
-	}
-}
+//[RecurringJob]
+//public class RecurringJob6
+//{
+//	public void MissingExecuteMethod()
+//	{
+//		throw new NotImplementedException();
+//	}
+//}
 
-[RecurringJob("*/5 * * * *", "ABC", "Priority", "DataRetention")]
-public class RecurringJob7
-{
-	public void Execute()
-	{
-		throw new NotImplementedException();
-	}
-}
+//[RecurringJob("*/5 * * * *", "ABC", "Priority", "DataRetention")]
+//public class RecurringJob7
+//{
+//	public void Execute()
+//	{
+//		throw new NotImplementedException();
+//	}
+//}
 
-[RecurringJob("*/5 * * * *", "ABC", "Priority", "DataRetention")]
-public class RecurringJob8
-{
-	public void AllErorrs()
-	{
-		throw new NotImplementedException();
-	}
-}
+//[RecurringJob("*/5 * * * *", "ABC", "Priority", "DataRetention")]
+//public class RecurringJob8
+//{
+//	public void AllErorrs()
+//	{
+//		throw new NotImplementedException();
+//	}
+//}
