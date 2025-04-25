@@ -72,17 +72,12 @@ public class RecuringJobGenerator : IIncrementalGenerator
 			{
 				List<string> errors = [];
 
-				bool hasExecuteMethod = classSymbol.GetMembers()
-					.OfType<IMethodSymbol>()
-					.Any(m => m.Name == "Execute" && m.Parameters.Length == 0);
-
-
-				if(!hasExecuteMethod)
+				if(!classSymbol.GetMembers().OfType<IMethodSymbol>().Any(m => m.Name == "Execute" && m.Parameters.Length == 0))
 				{
 					errors.Add("RJG001: Missing Execute Method");
 				}
 
-				if(!IsValidTimeZone(timeZone))
+				if(!TimeZoneInfo.GetSystemTimeZones().Any(tz => tz.Id == timeZone))
 				{
 					errors.Add($"RJG002: Invalid TimeZone - {timeZone}");
 				}
