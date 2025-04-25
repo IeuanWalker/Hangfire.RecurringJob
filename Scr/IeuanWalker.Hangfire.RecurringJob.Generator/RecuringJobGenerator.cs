@@ -5,7 +5,6 @@ using IeuanWalker.Hangfire.RecurringJob.Generator.Helpers;
 using IeuanWalker.Hangfire.RecurringJob.Generator.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
 namespace IeuanWalker.Hangfire.RecurringJob.Generator;
@@ -18,9 +17,9 @@ public class RecuringJobGenerator : IIncrementalGenerator
 
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
-		IncrementalValueProvider<ImmutableArray<List<JobModel>?>> provider = context.SyntaxProvider
+		IncrementalValueProvider<ImmutableArray<(List<JobModel> ValidJobs, Dictionary<INamedTypeSymbol, List<string>> InvalidClasses)>> provider = context.SyntaxProvider
 						 .ForAttributeWithMetadataName(fullAttribute, Match, Transform)
-						 .Where(static r => r is not null)
+						 .Where(static r => r.ValidJobs.Any() || r.InvalidClasses.Any())
 						 .Collect();
 
 		context.RegisterSourceOutput(provider, Generate!);
@@ -31,27 +30,20 @@ public class RecuringJobGenerator : IIncrementalGenerator
 		return true;
 	}
 
-	static List<JobModel>? Transform(GeneratorAttributeSyntaxContext context, CancellationToken _)
+	static (List<JobModel> ValidJobs, Dictionary<INamedTypeSymbol, List<string>> InvalidClasses) Transform(GeneratorAttributeSyntaxContext context, CancellationToken _)
 	{
-		IEnumerable<SyntaxNode> ancestors = context.TargetNode.Ancestors();
-		if (ancestors.FirstOrDefault(x => x.IsKind(SyntaxKind.CompilationUnit)) is not CompilationUnitSyntax compilationUnit)
-		{
-			return null;
-		}
-
-		if (compilationUnit.Members.FirstOrDefault(m => m.IsKind(SyntaxKind.NamespaceDeclaration) || m.IsKind(SyntaxKind.FileScopedNamespaceDeclaration)) is not BaseNamespaceDeclarationSyntax)
-		{
-			return null;
-		}
-
 		INamedTypeSymbol? markerAttribute = context.SemanticModel.Compilation.GetTypeByMetadataName(fullAttribute);
-		if (markerAttribute is null)
+		if(markerAttribute is null)
 		{
-			return null;
+			return (new List<JobModel>(), new Dictionary<INamedTypeSymbol, List<string>>(SymbolEqualityComparer.Default));
 		}
 
-		List<JobModel> result = [];
-		foreach (ImmutableArray<TypedConstant> constructorArguments in context.Attributes.Where(a => a?.AttributeClass is not null && a.AttributeClass.Equals(markerAttribute, SymbolEqualityComparer.Default)).Select(x => x.ConstructorArguments))
+		List<JobModel> validJobs = [];
+		Dictionary<INamedTypeSymbol, List<string>> invalidClasses = new(SymbolEqualityComparer.Default);
+
+		foreach(ImmutableArray<TypedConstant> constructorArguments in context.Attributes
+			.Where(a => a?.AttributeClass is not null && a.AttributeClass.Equals(markerAttribute, SymbolEqualityComparer.Default))
+			.Select(x => x.ConstructorArguments))
 		{
 			assemblyName = context.SemanticModel.Compilation.AssemblyName;
 			string jobId = context.TargetSymbol.Name;
@@ -59,7 +51,7 @@ public class RecuringJobGenerator : IIncrementalGenerator
 			string queue = EnqueuedState.DefaultQueue;
 			string timeZone = "UTC";
 
-			switch (constructorArguments.Length)
+			switch(constructorArguments.Length)
 			{
 				case 1:
 					cron = constructorArguments[0].Value?.ToString() ?? cron;
@@ -76,17 +68,76 @@ public class RecuringJobGenerator : IIncrementalGenerator
 					break;
 			}
 
-			result.Add(new JobModel(context.TargetSymbol.ToString(), jobId, cron, queue, timeZone));
+			if(context.TargetSymbol is INamedTypeSymbol classSymbol)
+			{
+				List<string> errors = [];
+
+				if(!classSymbol.GetMembers().OfType<IMethodSymbol>().Any(m => m.Name == "Execute" && m.Parameters.Length == 0))
+				{
+					errors.Add("RJG001: Missing Execute Method");
+				}
+
+				if(!IsValidTimeZone(timeZone))
+				{
+					errors.Add($"RJG002: Invalid TimeZone - {timeZone}");
+				}
+
+				if(errors.Any())
+				{
+					invalidClasses[classSymbol] = errors;
+				}
+				else
+				{
+					validJobs.Add(new JobModel(context.TargetSymbol.ToString(), jobId, cron, queue, timeZone));
+				}
+			}
 		}
 
-		return result.Count > 0 ? result : null;
+		return (validJobs, invalidClasses);
 	}
 
-	static void Generate(SourceProductionContext context, ImmutableArray<List<JobModel>> jobs)
+	static void Generate(SourceProductionContext context, ImmutableArray<(List<JobModel> ValidJobs, Dictionary<INamedTypeSymbol, List<string>> InvalidClasses)> jobs)
 	{
-		List<JobModel> jobsToAdd = jobs.SelectMany(x => x).ToList();
+		foreach(KeyValuePair<INamedTypeSymbol, List<string>> invalidClassEntry in jobs.SelectMany(x => x.InvalidClasses))
+		{
+			INamedTypeSymbol invalidClass = invalidClassEntry.Key;
 
-		if (!jobsToAdd.Any())
+			foreach(string error in invalidClassEntry.Value)
+			{
+				string diagnosticId = string.Empty;
+				string title = string.Empty;
+				string messageFormat = string.Empty;
+
+				if(error.StartsWith("RJG001"))
+				{
+					diagnosticId = "RJG001";
+					title = "Missing Execute Method";
+					messageFormat = "The class '{0}' must implement a parameterless method named 'Execute'.";
+				}
+				else if(error.StartsWith("RJG002"))
+				{
+					diagnosticId = "RJG002";
+					title = "Invalid TimeZone";
+					messageFormat = "The TimeZone (" + error.Split('-').LastOrDefault()?.Trim() + ") specified for the class '{0}' is invalid.";
+				}
+
+				context.ReportDiagnostic(Diagnostic.Create(
+					new DiagnosticDescriptor(
+						id: diagnosticId,
+						title: title,
+						messageFormat: messageFormat,
+						category: "RecurringJobGenerator",
+						DiagnosticSeverity.Error,
+						isEnabledByDefault: true),
+					invalidClass.Locations.FirstOrDefault(),
+					invalidClass.Name));
+			}
+		}
+
+
+		List<JobModel> jobsToAdd = jobs.SelectMany(x => x.ValidJobs).ToList();
+
+		if(!jobsToAdd.Any())
 		{
 			return;
 		}
@@ -94,30 +145,46 @@ public class RecuringJobGenerator : IIncrementalGenerator
 		StringBuilder sb = new();
 
 		sb.Append(@"// <auto-generated/>
-
 using Hangfire;
-using Microsoft.AspNetCore.Builder;");
+using Microsoft.AspNetCore.Builder;
 
-		sb.Append("\r\n\r\nnamespace ").Append(assemblyName).Append(@";
-
-public static class RecurringJobRegistrationExtensions
+namespace ").Append(assemblyName).Append(@"
 {
-	public static IApplicationBuilder AddRecurringJobsFrom").Append(assemblyName?.Sanitize(string.Empty) ?? "Assembly").Append(@"(this IApplicationBuilder app)
+	public static class RecurringJobRegistrationExtensions
 	{
+		public static IApplicationBuilder AddRecurringJobsFrom").Append(assemblyName?.Sanitize(string.Empty) ?? "Assembly").Append(@"(this IApplicationBuilder app)
+		{
 ");
-		foreach (JobModel job in jobsToAdd.OrderBy(r => r.FullClassName))
+		foreach(JobModel job in jobsToAdd.OrderBy(r => r.FullClassName))
 		{
 			sb
-				.Append("\t\tRecurringJob.AddOrUpdate<").Append(job.FullClassName).Append(">(\"").Append(job.JobId).Append("\", \"").Append(job.Queue).Append("\", x => x.Execute(), \"").Append(job.Cron).Append("\", new RecurringJobOptions").Append("\r\n")
-				.Append("\t\t{\r\n")
-				.Append("\t\t\tTimeZone = TimeZoneInfo.FindSystemTimeZoneById(\"").Append(job.TimeZone).Append("\")\r\n")
-				.Append("\t\t});\r\n");
+				.Append("\t\t\tRecurringJob.AddOrUpdate<").Append(job.FullClassName).Append(">(")
+				.Append(SymbolDisplay.FormatLiteral(job.JobId, true)).Append(", ")
+				.Append(SymbolDisplay.FormatLiteral(job.Queue, true)).Append(", x => x.Execute(), ")
+				.Append(SymbolDisplay.FormatLiteral(job.Cron, true)).Append(", new RecurringJobOptions").Append("\r\n")
+				.Append("\t\t\t{\r\n")
+				.Append("\t\t\t\tTimeZone = TimeZoneInfo.FindSystemTimeZoneById(").Append(SymbolDisplay.FormatLiteral(job.TimeZone, true)).Append(")\r\n")
+				.Append("\t\t\t});\r\n");
 		}
-		sb.Append(@"
-		return app;
+		sb.Append(@"  
+			return app;
+		}
 	}
 }");
 
 		context.AddSource("RecurringJobRegistrationExtensions.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+	}
+
+	static bool IsValidTimeZone(string timeZone)
+	{
+		try
+		{
+			TimeZoneInfo.FindSystemTimeZoneById(timeZone);
+			return true;
+		}
+		catch(Exception)
+		{
+			return false;
+		}
 	}
 }
