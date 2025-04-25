@@ -72,7 +72,7 @@ public class RecurringJob7
 [RecurringJob("*/5 * * * *", "ABC", "Priority", "DataRetention")]
 public class RecurringJob8
 {
-	public void AllErorrs()
+	public void AllErrors()
 	{
 		throw new NotImplementedException();
 	}
