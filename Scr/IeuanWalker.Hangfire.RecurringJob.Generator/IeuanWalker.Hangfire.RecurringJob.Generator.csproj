@@ -1,52 +1,53 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-    <IncludeBuildOutput>false</IncludeBuildOutput>
-    <IsRoslynComponent>true</IsRoslynComponent>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<IsRoslynComponent>true</IsRoslynComponent>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
 
-  <PropertyGroup>
+	<PropertyGroup>
     <Version>1.0.0</Version>
     <PackageId>IeuanWalker.Hangfire.RecurringJob</PackageId>
     <Description>Automatically generates the recurring job registration code using source generators</Description>
-    <PackageTags>Hangfire;RecurringJob;Source Generator</PackageTags>
-    <Authors>Ieuan Walker</Authors>
-    <PackageProjectUrl>https://github.com/IeuanWalker/Hangfire.RecurringJob</PackageProjectUrl>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/IeuanWalker/Hangfire.RecurringJob</RepositoryUrl>
+		<PackageTags>Hangfire;RecurringJob;Source Generator</PackageTags>
+		<Authors>Ieuan Walker</Authors>
+		<PackageProjectUrl>https://github.com/IeuanWalker/Hangfire.RecurringJob</PackageProjectUrl>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/IeuanWalker/Hangfire.RecurringJob</RepositoryUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-  </PropertyGroup>
+	</PropertyGroup>
 
   <ItemGroup>
     <None Include="../../LICENSE" Pack="true" PackagePath="\" />
-    @@ -33,21 +33,21 @@
+    <None Include="../../README.md" Pack="true" PackagePath="\" />
+    <None Include="../../icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.7.0" />
-  </ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.7.0" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
-  <ItemGroup>
-    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+		<!-- Pack the attributes dll in the analyzers/dotnet/cs path -->
+		<None Include="$(OutputPath)\IeuanWalker.Hangfire.RecurringJob.Attributes.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
-    <!-- Pack the attributes dll in the analyzers/dotnet/cs path -->
-    <None Include="$(OutputPath)\IeuanWalker.Hangfire.RecurringJob.Attributes.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-
-    <!-- Pack the attributes dll in the lib\netstandard2.0 path -->
-    <None Include="$(OutputPath)\IeuanWalker.Hangfire.RecurringJob.Attributes.dll" Pack="true" PackagePath="lib\netstandard2.0" Visible="true" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\IeuanWalker.Hangfire.RecurringJob.Attributes\IeuanWalker.Hangfire.RecurringJob.Attributes.csproj" PrivateAssets="all" />
-  </ItemGroup>
+		<!-- Pack the attributes dll in the lib\netstandard2.0 path -->
+		<None Include="$(OutputPath)\IeuanWalker.Hangfire.RecurringJob.Attributes.dll" Pack="true" PackagePath="lib\netstandard2.0" Visible="true" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<ProjectReference Include="..\IeuanWalker.Hangfire.RecurringJob.Attributes\IeuanWalker.Hangfire.RecurringJob.Attributes.csproj" PrivateAssets="all" />
+	</ItemGroup>
 </Project>
