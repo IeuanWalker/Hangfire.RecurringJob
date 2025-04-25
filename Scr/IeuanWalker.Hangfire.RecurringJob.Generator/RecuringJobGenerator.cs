@@ -17,7 +17,7 @@ public class RecuringJobGenerator : IIncrementalGenerator
 
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
-		IncrementalValueProvider<ImmutableArray<(List<JobModel> ValidJobs, List<INamedTypeSymbol> InvalidClasses)>> provider = context.SyntaxProvider
+		IncrementalValueProvider<ImmutableArray<(List<JobModel> ValidJobs, Dictionary<INamedTypeSymbol, List<string>> InvalidClasses)>> provider = context.SyntaxProvider
 						 .ForAttributeWithMetadataName(fullAttribute, Match, Transform)
 						 .Where(static r => r.ValidJobs.Any() || r.InvalidClasses.Any())
 						 .Collect();
@@ -30,16 +30,16 @@ public class RecuringJobGenerator : IIncrementalGenerator
 		return true;
 	}
 
-	static (List<JobModel> ValidJobs, List<INamedTypeSymbol> InvalidClasses) Transform(GeneratorAttributeSyntaxContext context, CancellationToken _)
+	static (List<JobModel> ValidJobs, Dictionary<INamedTypeSymbol, List<string>> InvalidClasses) Transform(GeneratorAttributeSyntaxContext context, CancellationToken _)
 	{
 		INamedTypeSymbol? markerAttribute = context.SemanticModel.Compilation.GetTypeByMetadataName(fullAttribute);
 		if(markerAttribute is null)
 		{
-			return (new List<JobModel>(), new List<INamedTypeSymbol>());
+			return (new List<JobModel>(), new Dictionary<INamedTypeSymbol, List<string>>(SymbolEqualityComparer.Default));
 		}
 
 		List<JobModel> validJobs = [];
-		List<INamedTypeSymbol> invalidClasses = [];
+		Dictionary<INamedTypeSymbol, List<string>> invalidClasses = new(SymbolEqualityComparer.Default);
 
 		foreach(ImmutableArray<TypedConstant> constructorArguments in context.Attributes
 			.Where(a => a?.AttributeClass is not null && a.AttributeClass.Equals(markerAttribute, SymbolEqualityComparer.Default))
@@ -70,58 +70,67 @@ public class RecuringJobGenerator : IIncrementalGenerator
 
 			if(context.TargetSymbol is INamedTypeSymbol classSymbol)
 			{
+				List<string> errors = [];
+
 				bool hasExecuteMethod = classSymbol.GetMembers()
 					.OfType<IMethodSymbol>()
 					.Any(m => m.Name == "Execute" && m.Parameters.Length == 0);
 
+
 				if(!hasExecuteMethod)
 				{
-					invalidClasses.Add(classSymbol);
-					continue;
+					errors.Add("RJG001: Missing Execute Method");
 				}
 
-				// Validate the timeZone
 				if(!IsValidTimeZone(timeZone))
 				{
-					invalidClasses.Add(classSymbol);
-					continue;
+					errors.Add("RJG002: Invalid TimeZone");
 				}
 
-				validJobs.Add(new JobModel(context.TargetSymbol.ToString(), jobId, cron, queue, timeZone));
+				if(errors.Any())
+				{
+					invalidClasses[classSymbol] = errors;
+				}
+				else
+				{
+					validJobs.Add(new JobModel(context.TargetSymbol.ToString(), jobId, cron, queue, timeZone));
+				}
 			}
 		}
 
 		return (validJobs, invalidClasses);
 	}
 
-	static void Generate(SourceProductionContext context, ImmutableArray<(List<JobModel> ValidJobs, List<INamedTypeSymbol> InvalidClasses)> jobs)
+	static void Generate(SourceProductionContext context, ImmutableArray<(List<JobModel> ValidJobs, Dictionary<INamedTypeSymbol, List<string>> InvalidClasses)> jobs)
 	{
-		foreach(INamedTypeSymbol? invalidClass in jobs.SelectMany(x => x.InvalidClasses))
+		foreach(KeyValuePair<INamedTypeSymbol, List<string>> invalidClassEntry in jobs.SelectMany(x => x.InvalidClasses))
 		{
-			// Check if the invalid class is missing the Execute method
-			if(invalidClass.GetMembers()
-				.OfType<IMethodSymbol>()
-				.All(m => m.Name != "Execute" || m.Parameters.Length != 0))
+			INamedTypeSymbol invalidClass = invalidClassEntry.Key;
+
+			foreach(string error in invalidClassEntry.Value)
 			{
+				string diagnosticId = string.Empty;
+				string title = string.Empty;
+				string messageFormat = string.Empty;
+
+				if(error.StartsWith("RJG001"))
+				{
+					diagnosticId = "RJG001";
+					title = "Missing Execute Method";
+					messageFormat = "The class '{0}' must implement a parameterless method named 'Execute'.";
+				}
+				else if(error.StartsWith("RJG002"))
+				{
+					diagnosticId = "RJG002";
+					title = "Invalid TimeZone";
+					messageFormat = "The TimeZone specified for the class '{0}' is invalid.";
+				}
+
 				context.ReportDiagnostic(Diagnostic.Create(
 					new DiagnosticDescriptor(
-						id: "RJG001",
-						title: "Missing Execute Method",
-						messageFormat: "The class '{0}' must implement a parameterless method named 'Execute'.",
-						category: "RecurringJobGenerator",
-						DiagnosticSeverity.Error,
-						isEnabledByDefault: true),
-					invalidClass.Locations.FirstOrDefault(),
-					invalidClass.Name));
-			}
-			else
-			{
-				// Report invalid TimeZone error
-				context.ReportDiagnostic(Diagnostic.Create(
-					new DiagnosticDescriptor(
-						id: "RJG002",
-						title: "Invalid TimeZone",
-						messageFormat: "The TimeZone specified for the class '{0}' is invalid.",
+						id: diagnosticId,
+						title: title,
+						messageFormat: messageFormat,
 						category: "RecurringJobGenerator",
 						DiagnosticSeverity.Error,
 						isEnabledByDefault: true),
@@ -141,30 +150,30 @@ public class RecuringJobGenerator : IIncrementalGenerator
 		StringBuilder sb = new();
 
 		sb.Append(@"// <auto-generated/>
-
 using Hangfire;
-using Microsoft.AspNetCore.Builder;");
+using Microsoft.AspNetCore.Builder;
 
-		sb.Append("\r\n\r\nnamespace ").Append(assemblyName).Append(@";
-
-public static class RecurringJobRegistrationExtensions
+namespace ").Append(assemblyName).Append(@"
 {
-	public static IApplicationBuilder AddRecurringJobsFrom").Append(assemblyName?.Sanitize(string.Empty) ?? "Assembly").Append(@"(this IApplicationBuilder app)
+	public static class RecurringJobRegistrationExtensions
 	{
+		public static IApplicationBuilder AddRecurringJobsFrom").Append(assemblyName?.Sanitize(string.Empty) ?? "Assembly").Append(@"(this IApplicationBuilder app)
+		{
 ");
 		foreach(JobModel job in jobsToAdd.OrderBy(r => r.FullClassName))
 		{
 			sb
-				.Append("\t\tRecurringJob.AddOrUpdate<").Append(job.FullClassName).Append(">(")
+				.Append("\t\t\tRecurringJob.AddOrUpdate<").Append(job.FullClassName).Append(">(")
 				.Append(SymbolDisplay.FormatLiteral(job.JobId, true)).Append(", ")
 				.Append(SymbolDisplay.FormatLiteral(job.Queue, true)).Append(", x => x.Execute(), ")
 				.Append(SymbolDisplay.FormatLiteral(job.Cron, true)).Append(", new RecurringJobOptions").Append("\r\n")
-				.Append("\t\t{\r\n")
-				.Append("\t\t\tTimeZone = TimeZoneInfo.FindSystemTimeZoneById(").Append(SymbolDisplay.FormatLiteral(job.TimeZone, true)).Append(")\r\n")
-				.Append("\t\t});\r\n");
+				.Append("\t\t\t{\r\n")
+				.Append("\t\t\t\tTimeZone = TimeZoneInfo.FindSystemTimeZoneById(").Append(SymbolDisplay.FormatLiteral(job.TimeZone, true)).Append(")\r\n")
+				.Append("\t\t\t});\r\n");
 		}
-		sb.Append(@"
-		return app;
+		sb.Append(@"  
+			return app;
+		}
 	}
 }");
 

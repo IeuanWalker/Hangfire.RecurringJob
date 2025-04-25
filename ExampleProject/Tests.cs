@@ -60,11 +60,19 @@ public class RecurringJob6
 	}
 }
 
-[RecurringJob]
 [RecurringJob("*/5 * * * *", "ABC", "Priority", "DataRetention")]
 public class RecurringJob7
 {
 	public void Execute()
+	{
+		throw new NotImplementedException();
+	}
+}
+
+[RecurringJob("*/5 * * * *", "ABC", "Priority", "DataRetention")]
+public class RecurringJob8
+{
+	public void AllErorrs()
 	{
 		throw new NotImplementedException();
 	}
